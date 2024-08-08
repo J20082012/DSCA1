@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "generated.ds.service1";
+option java_outer_classname = "Service1Impl";
+
+package service1;
+
+// Interface exported by the server.
+
+
+service Service1 {
+  rpc ActivateHorn(HornRequest) returns (HornResponse) {}
+  rpc RetrieveHornStatus(HornStatusRequest) returns (HornStatusResponse) {}
+}
+
+message HornRequest {
+  string vehicleID = 1;
+}
+
+message HornResponse {
+  bool activateConfirmation = 1;
+}
+
+message HornStatusRequest {
+  string vehicleID = 1;
+}
+
+message HornStatusResponse {
+  string HornStatus = 1;
+}

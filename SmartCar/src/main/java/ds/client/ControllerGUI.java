@@ -1,0 +1,239 @@
+package ds.client;
+
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Iterator;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+
+import generated.ds.service1.Service1Grpc;
+import generated.ds.service1.HornRequest;
+import generated.ds.service1.HornResponse;
+import generated.ds.service1.HornStatusRequest;
+import generated.ds.service1.HornStatusResponse;
+import generated.ds.service2.Service2Grpc;
+import generated.ds.service2.TrafficRequest;
+import generated.ds.service2.TrafficResponse;
+import generated.ds.service2.PlanningRequest;
+import generated.ds.service2.PlanningResponse;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
+
+public class ControllerGUI implements ActionListener {
+
+    private JTextField entry1, reply1;
+    private JTextField entry2, reply2;
+    private JTextField entry3, reply3;
+
+    private JPanel getService1JPanel() {
+        JPanel panel = new JPanel();
+        BoxLayout boxlayout = new BoxLayout(panel, BoxLayout.X_AXIS);
+
+        JLabel label = new JLabel("Enter vehicle ID");
+        panel.add(label);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+        entry1 = new JTextField("", 10);
+        panel.add(entry1);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+
+        JButton button1 = new JButton("Activate Horn");
+        button1.addActionListener(this);
+        button1.setActionCommand("Activate Horn");
+        panel.add(button1);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+
+        JButton button2 = new JButton("Retrieve Horn Status");
+        button2.addActionListener(this);
+        button2.setActionCommand("Retrieve Horn Status");
+        panel.add(button2);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+
+        reply1 = new JTextField("", 20);
+        reply1.setEditable(false);
+        panel.add(reply1);
+
+        panel.setLayout(boxlayout);
+        return panel;
+    }
+
+    private JPanel getService2JPanel() {
+        JPanel panel = new JPanel();
+        BoxLayout boxlayout = new BoxLayout(panel, BoxLayout.X_AXIS);
+
+        JLabel label = new JLabel("Enter starting & destination points");
+        panel.add(label);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+        entry2 = new JTextField("", 20); // Adjusted size for longer input
+        panel.add(entry2);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+
+        JButton button1 = new JButton("Traffic Update");
+        button1.addActionListener(this);
+        button1.setActionCommand("Traffic Update");
+        panel.add(button1);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+
+        JButton button2 = new JButton("Planning Update");
+        button2.addActionListener(this);
+        button2.setActionCommand("Planning Update");
+        panel.add(button2);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+
+        reply2 = new JTextField("", 20);
+        reply2.setEditable(false);
+        panel.add(reply2);
+
+        panel.setLayout(boxlayout);
+        return panel;
+    }
+
+    private JPanel getService3JPanel() {
+        JPanel panel = new JPanel();
+        BoxLayout boxlayout = new BoxLayout(panel, BoxLayout.X_AXIS);
+
+        JLabel label = new JLabel("Enter value");
+        panel.add(label);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+        entry3 = new JTextField("", 10);
+        panel.add(entry3);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+
+        JButton button = new JButton("S3:RPC1");
+        button.addActionListener(this);
+        panel.add(button);
+        panel.add(Box.createRigidArea(new Dimension(10, 0)));
+
+        reply3 = new JTextField("", 10);
+        reply3.setEditable(false);
+        panel.add(reply3);
+
+        panel.setLayout(boxlayout);
+        return panel;
+    }
+
+    public static void main(String[] args) {
+        ControllerGUI gui = new ControllerGUI();
+        gui.build();
+    }
+
+    private void build() {
+        JFrame frame = new JFrame("Service Controller Sample");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JPanel panel = new JPanel();
+        BoxLayout boxlayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
+        panel.setLayout(boxlayout);
+        panel.setBorder(new EmptyBorder(new Insets(50, 100, 50, 100)));
+
+        panel.add(getService1JPanel());
+        panel.add(getService2JPanel());
+        panel.add(getService3JPanel());
+
+        frame.setSize(500, 400); // Adjusted size to fit new controls
+        frame.add(panel);
+        frame.pack();
+        frame.setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        JButton button = (JButton) e.getSource();
+        String label = button.getActionCommand();
+
+        ManagedChannel channel = null;
+
+        try {
+            if (label.equals("Activate Horn")) {
+                System.out.println("Activating horn for vehicle ...");
+                channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build();
+                Service1Grpc.Service1BlockingStub blockingStub = Service1Grpc.newBlockingStub(channel);
+
+                HornRequest request = HornRequest.newBuilder().setVehicleID(entry1.getText()).build();
+                HornResponse response = blockingStub.activateHorn(request);
+                reply1.setText(String.valueOf(response.getActivateConfirmation()));
+
+            } else if (label.equals("Retrieve Horn Status")) {
+                System.out.println("Retrieving horn status for vehicle ...");
+                channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build();
+                Service1Grpc.Service1BlockingStub blockingStub = Service1Grpc.newBlockingStub(channel);
+
+                HornStatusRequest request = HornStatusRequest.newBuilder().setVehicleID(entry1.getText()).build();
+                HornStatusResponse response = blockingStub.retrieveHornStatus(request);
+                reply1.setText(response.getHornStatus());
+
+            } else if (label.equals("Traffic Update")) {
+                System.out.println("Retrieving traffic update ...");
+                channel = ManagedChannelBuilder.forAddress("localhost", 50052).usePlaintext().build();
+                Service2Grpc.Service2BlockingStub blockingStub = Service2Grpc.newBlockingStub(channel);
+
+                String[] points = entry2.getText().split(",");
+                if (points.length == 2) {
+                    TrafficRequest request = TrafficRequest.newBuilder()
+                            .setStartingPoint(points[0].trim())
+                            .setDestinationPoint(points[1].trim())
+                            .build();
+                    Iterator<TrafficResponse> responseIterator = blockingStub.trafficUpdate(request);
+                    StringBuilder responses = new StringBuilder();
+                    while (responseIterator.hasNext()) {
+                        TrafficResponse response = responseIterator.next();
+                        responses.append(response.getCurrentLocation()).append(", ");
+                    }
+                    reply2.setText(responses.toString());
+                } else {
+                    reply2.setText("Invalid input format. Use 'startingPoint, destinationPoint'.");
+                }
+
+            } else if (label.equals("Planning Update")) {
+                System.out.println("Sending planning update ...");
+                channel = ManagedChannelBuilder.forAddress("localhost", 50052).usePlaintext().build();
+                Service2Grpc.Service2Stub asyncStub = Service2Grpc.newStub(channel);
+
+                StreamObserver<PlanningRequest> requestObserver = asyncStub.planningUpdate(new StreamObserver<PlanningResponse>() {
+                    @Override
+                    public void onNext(PlanningResponse response) {
+                        reply2.setText(response.getRouteChangeAdvice());
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        t.printStackTrace();
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        System.out.println("Planning update completed.");
+                    }
+                });
+
+                String[] locations = entry2.getText().split(",");
+                for (String location : locations) {
+                    PlanningRequest request = PlanningRequest.newBuilder()
+                            .setCurrentLocation(location.trim())
+                            .build();
+                    requestObserver.onNext(request);
+                }
+                requestObserver.onCompleted();
+
+            } else if (label.equals("S3:RPC1")) {
+                System.out.println("Service 3 to be invoked ...");
+
+                // Existing code for Service3 (not changed)
+
+            }
+        } finally {
+            if (channel != null) {
+                channel.shutdown();
+            }
+        }
+    }
+}
