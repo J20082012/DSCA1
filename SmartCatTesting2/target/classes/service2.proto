@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "generated.ds.service2";
+option java_outer_classname = "Service2Impl";
+
+package service2;
+
+// Interface exported by the server.
+
+service Service2 {
+  // Server-side streaming RPC
+  rpc TrafficUpdate (TrafficRequest) returns (stream TrafficResponse) {}
+
+  // Bidirectional streaming RPC
+  rpc PlanningUpdate (stream PlanningRequest) returns (stream PlanningResponse) {}
+}
+
+// Message types
+
+message TrafficRequest {
+  string startingPoint = 1;
+  string destinationPoint = 2;
+}
+
+message TrafficResponse {
+  string currentLocation = 1;
+}
+
+message PlanningRequest {
+  string currentLocation = 1;
+}
+
+message PlanningResponse {
+  string routeChangeAdvice = 1;
+}
